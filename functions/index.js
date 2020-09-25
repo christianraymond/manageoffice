@@ -9,7 +9,7 @@ app.get("/offices", (req, res) => {
   admin
     .firestore()
     .collection("offices")
-    .orderBy('officeName', 'asc') //Get latest office show first
+    .orderBy('officeName', 'desc') //Get latest office show first
     .get()
     .then((data) => {
       let offices = [];
@@ -56,4 +56,4 @@ app.post("/office", (req, res) => {
 
 //https://baseurl.com/api/**
 
-exports.api = functions.https.onRequest(app);
+exports.api = functions.region('europe-west1').https.onRequest(app);
