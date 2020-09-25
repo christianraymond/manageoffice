@@ -1,30 +1,37 @@
 const functions = require("firebase-functions");
-
 const admin = require("firebase-admin");
 admin.initializeApp();
 
-exports.getOffices = functions.https.onRequest((req, res) => {
+const express = require("express");
+const app = express();
+
+app.get("/offices", (req, res) => {
   admin
     .firestore()
     .collection("offices")
+    .orderBy('officeName', 'asc') //Get latest office show first
     .get()
     .then((data) => {
       let offices = [];
-      data.forEach((docItem) => {
-        offices.push(docItem.data());
+      data.forEach((doc) => {
+        offices.push({
+          //Show offices ID aswell in postman
+          officeId: doc.id,
+          officeName: doc.data().officeName,
+          officeLocation: doc.data().officeLocation,
+          officeEmail: doc.data().officeEmail,
+          officeTellNumber: doc.data().officeTellNumber,
+          officeMaxOcupant: doc.data().officeMaxOcupant,
+          officeColor: doc.data().officeColor,
+        });
       });
-
       return res.json(offices);
     })
     .catch((err) => console.error(err));
 });
 
 //Create office through POST request
-exports.createOffice = functions.https.onRequest((req, res) => {
-  //prevent sending request to method that is not meant to be POST req.
-  if (req.method !== "POST") {
-    return res.status(400).json({ error: "Method not allowed" });
-  }
+app.post("/office", (req, res) => {
   const newOffice = {
     officeName: req.body.officeName,
     officeLocation: req.body.officeLocation,
@@ -46,3 +53,7 @@ exports.createOffice = functions.https.onRequest((req, res) => {
       console.error(err);
     });
 });
+
+//https://baseurl.com/api/**
+
+exports.api = functions.https.onRequest(app);
