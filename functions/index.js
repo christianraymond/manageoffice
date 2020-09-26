@@ -42,10 +42,40 @@ app.get("/offices", (req, res) => {
     .catch((err) => console.error(err));
 });
 
+//Create Firibase Middleware(interceptor) to protect from anyone manupulating office page
+const FBAuth = (req, res, next) => {
+  let idToken;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')){
+    idToken = req.headers.authorization.split('Bearer ')[1];
+  } else {
+    console.error("No token found");
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+  //Verify if the token was issued by this application not somewhere else
+  admin
+    .auth()
+    .verifyIdToken(idToken)
+    .then((decodedToken) => {
+      req.user = decodedToken;
+      console.log(decodedToken);
+      return db.collection("users").where("userId", "==", req.user.uid).limit(1).get();
+    })
+    .then(data => {
+      req.user.handler = data.docs[0].data().handler;
+      return next();
+    })
+    .catch(err => {
+      console.error("Error while verifying token ", err);
+      return res.status(403).json(err);
+    })
+};
 //Create office through POST request
-app.post("/office", (req, res) => {
+app.post("/office", FBAuth, (req, res) => {
+  if(req.body.officeName.trim() == ''){
+    return res.status(400).json({officeName: 'Office name must not be empty'})
+  }
   const newOffice = {
-    officeName: req.body.officeName,
+    officeName: req.user.handler, /*req.body.officeName,*/
     officeLocation: req.body.officeLocation,
     officeEmail: req.body.officeEmail,
     officeTellNumber: req.body.officeTellNumber,
@@ -159,12 +189,17 @@ app.post("/login", (req, res) => {
     .then((data) => {
       return data.user.getIdToken();
     })
-  .then((token) => {
-    return res.json({ token });
-  }).catch((err) => {
-    console.error(err);
-    return res.status(500).json({ errors: err.code });
-  });
+    .then((token) => {
+      return res.json({ token });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.code === "auth/wrong-password") {
+        return res
+          .status(403)
+          .json({ general: "Wrong credential, please try again" });
+      } else return res.status(500).json({ errors: err.code });
+    });
 });
 
 //https://baseurl.com/api/**
