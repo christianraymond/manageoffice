@@ -149,7 +149,7 @@ app.post("/login", (req, res) => {
   let errors = {};
 
   if (isEmpty(user.email)) errors.email = "Must not be empty";
-  if (isEmpty(user.password)) errors.password = "Must not be empty";
+  if (isEmpty(user.password)) errors.password = "Must no be empty";
 
   if (Object.keys(errors).length > 0) return res.status(400).json(errors);
 
@@ -159,13 +159,12 @@ app.post("/login", (req, res) => {
     .then((data) => {
       return data.user.getIdToken();
     })
-    .then((token) => {
-      return res.json({token});
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({error: err.code});
-    });
+  .then((token) => {
+    return res.json({ token });
+  }).catch((err) => {
+    console.error(err);
+    return res.status(500).json({ errors: err.code });
+  });
 });
 
 //https://baseurl.com/api/**
