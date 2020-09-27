@@ -18,6 +18,7 @@ exports.getAllOffices = (req, res) => {
           officeTellNumber: doc.data().officeTellNumber,
           officeMaxOcupant: doc.data().officeMaxOcupant,
           officeColor: doc.data().officeColor,
+          officeColorImg: doc.data().colorUrl
         });
       });
       return res.json(offices);
@@ -79,7 +80,7 @@ exports.officeView = (req, res) => {
     .then((data) => {
       officeData.staffs = [];
       data.forEach((doc) => {
-        officeData.staffs.push(doc.data()); //Remember to pass the staffId as well.
+        officeData.staffs.push(doc.data()); 
       });
       return res.json(officeData);
     })
@@ -92,7 +93,7 @@ exports.officeView = (req, res) => {
 //Add staffsMember
 exports.addStaffMember = (req, res) => {
   if (req.body.staffName.trim() === "")
-    return res.status(400).json({ error: "Must not be empty" });
+    return res.status(400).json({ staffName: "Must not be empty" });
 
   const newStaffMember = {
     staffName: req.body.staffName,
