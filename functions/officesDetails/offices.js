@@ -36,19 +36,22 @@ exports.createSingleOffice = (req, res) => {
   const officeDefaultColor = "offceDefaultColor.jpg";
 
   const newOffice = {
-    officeName: req.user.handler, // <= OfficeName will automatically take the name of sined in user as a hanlder name otherwise use the => /* officeName: req.body.officeName,*/
+    officeName: req.body.officeName, // <= OfficeName will automatically take the name of sined in user as a hanlder name otherwise use the => /* officeName: req.body.officeName,*/
     officeLocation: req.body.officeLocation,
     officeEmail: req.body.officeEmail,
     officeTellNumber: req.body.officeTellNumber,
     officeMaxOcupant: req.body.officeMaxOcupant,
     officeColor: req.body.officeColor,
     colorUrl: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${officeDefaultColor}?alt=media`,
+    staffMemberCount: 0,
   };
 
   db.collection("offices")
     .add(newOffice)
     .then((doc) => {
-      res.json({ message: `document ${doc.id} created successfully` });
+      const resOffice = newOffice;
+      resOffice.officeId = doc.id;
+      res.json(resOffice);
     })
     .catch((err) => {
       res.status(500).json({ error: "Something went wrong" });
@@ -56,7 +59,7 @@ exports.createSingleOffice = (req, res) => {
     });
 };
 
-///Create staffs func
+///Fetch StaffNames
 exports.officeView = (req, res) => {
   let officeData = {};
   db.doc(`/offices/${req.params.officeId}`)
@@ -69,18 +72,72 @@ exports.officeView = (req, res) => {
       officeData.officeId = doc.id;
       return db
         .collection("staffs")
+        .orderBy("staffName", "desc")
         .where("officeId", "==", req.params.officeId)
-        .get(); //Query to staffs-names that links to the same officeId.
+        .get(); //Query staffNames by officeId
     })
     .then((data) => {
       officeData.staffs = [];
       data.forEach((doc) => {
-        officeData.staffs.push(doc.data()); //Here you need to pass the staffId
+        officeData.staffs.push(doc.data()); //Remember to pass the staffId as well.
       });
       return res.json(officeData);
     })
-    .catch((err) => { 
+    .catch((err) => {
       console.error(err);
       res.status(500).json({ error: err.code });
+    });
+};
+
+//Add staffsMember
+exports.addStaffMember = (req, res) => {
+  if (req.body.staffName.trim() === "")
+    return res.status(400).json({ error: "Must not be empty" });
+
+  const newStaffMember = {
+    staffName: req.body.staffName,
+    officeId: req.params.officeId,
+  };
+
+  db.doc(`/offices/${req.params.officeId}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(400).json({ error: "Office not found" });
+      }
+      return doc.ref.update({
+        staffMemberCount: doc.data().staffMemberCount + 1,
+      });
+    })
+    .then(() => {
+      return db.collection("staffs").add(newStaffMember);
+    })
+    .then(() => {
+      res.json(newStaffMember);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: "Something went wrong" });
+    });
+};
+
+//Delete an office
+exports.deleteOffice = (req, res) => {
+  const officeReference = db.doc(`/offices/${req.params.officeId}`);
+  officeReference
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "Office not found" });
+      } else {
+        officeReference.delete();
+      }
+    })
+    .then(() => {
+      res.json({ message: "Office deleted successfully" });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
     });
 };
