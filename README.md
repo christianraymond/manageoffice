@@ -30,10 +30,9 @@ And repeat
 ```
 until finished
 ```
-
-At this point you will need Postman or Insomnia a software development tool that will enables to test calls these APIs.
-To find a better since on what path to pass in Postman when testing or executing these APIs, see the index.js file 
-Remember the config file is pointing to my db, so when you successfully do a post request, your information will be avaialable in my db.
+Asuming that you have now firebase serve inside your terminal, find the link like```http://localhost:5000/manageofficeproj-23044/us-central1/api``` At this point you will need Postman or Insomnia a software development tool that will enables to test, calls these APIs.
+All path arguments can be found inside index.js, see the index.js file 
+Remember the config(firebaseConfig) file is pointing to my db, so when you successfully do a post request, your information will be available in my db.
 I will later change to RULES in my db so that only registered users has access to create such.
 
 ## Author
