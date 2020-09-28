@@ -1,4 +1,4 @@
-# Manage office Web app
+# Manage office / Server side
 
 The system allowing users to create and manage office space. A server side project built with Cloud Functions Firebase and Express.
 
