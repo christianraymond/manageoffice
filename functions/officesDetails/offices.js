@@ -18,7 +18,7 @@ exports.getAllOffices = (req, res) => {
           officeTellNumber: doc.data().officeTellNumber,
           officeMaxOcupant: doc.data().officeMaxOcupant,
           officeColor: doc.data().officeColor,
-          officeColorImg: doc.data().colorUrl
+          officeColorImg: doc.data().colorUrl,
         });
       });
       return res.json(offices);
@@ -28,36 +28,38 @@ exports.getAllOffices = (req, res) => {
 
 //Create office through POST request
 exports.createSingleOffice = (req, res) => {
-  if (req.body.officeName.trim() == "") {
-    return res
-      .status(400)
-      .json({ officeName: "Office name must not be empty" });
-  }
+  cors(req, res, () => {
+    if (req.body.officeName.trim() == "") {
+      return res
+        .status(400)
+        .json({ officeName: "Office name must not be empty" });
+    }
 
-  const officeDefaultColor = "offceDefaultColor.jpg";
+    const officeDefaultColor = "offceDefaultColor.jpg";
 
-  const newOffice = {
-    officeName: req.body.officeName, // <= OfficeName will automatically take the name of sined in user as a hanlder name otherwise use the => /* officeName: req.body.officeName,*/
-    officeLocation: req.body.officeLocation,
-    officeEmail: req.body.officeEmail,
-    officeTellNumber: req.body.officeTellNumber,
-    officeMaxOcupant: req.body.officeMaxOcupant,
-    officeColor: req.body.officeColor,
-    colorUrl: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${officeDefaultColor}?alt=media`,
-    staffMemberCount: 0,
-  };
+    const newOffice = {
+      officeName: req.body.officeName, // <= OfficeName will automatically take the name of sined in user as a hanlder name otherwise use the => /* officeName: req.body.officeName,*/
+      officeLocation: req.body.officeLocation,
+      officeEmail: req.body.officeEmail,
+      officeTellNumber: req.body.officeTellNumber,
+      officeMaxOcupant: req.body.officeMaxOcupant,
+      officeColor: req.body.officeColor,
+      colorUrl: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${officeDefaultColor}?alt=media`,
+      staffMemberCount: 0,
+    };
 
-  db.collection("offices")
-    .add(newOffice)
-    .then((doc) => {
-      const resOffice = newOffice;
-      resOffice.officeId = doc.id;
-      res.json(resOffice);
-    })
-    .catch((err) => {
-      res.status(500).json({ error: "Something went wrong" });
-      console.error(err);
-    });
+    db.collection("offices")
+      .add(newOffice)
+      .then((doc) => {
+        const resOffice = newOffice;
+        resOffice.officeId = doc.id;
+        res.json(resOffice);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: "Something went wrong" });
+        console.error(err);
+      });
+  });
 };
 
 ///Fetch StaffNames
@@ -80,7 +82,7 @@ exports.officeView = (req, res) => {
     .then((data) => {
       officeData.staffs = [];
       data.forEach((doc) => {
-        officeData.staffs.push(doc.data()); 
+        officeData.staffs.push(doc.data());
       });
       return res.json(officeData);
     })
